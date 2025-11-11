@@ -127,4 +127,36 @@ def update_task(task_id):
         logging.error(f"Erro ao atualizar tarefa: {e}")
         return jsonify({"error": "Erro interno ao atualizar tarefa"}), 500
 
-# (Vamos deixar o endpoint de DELETAR para o próximo passo, para focar nestes primeiro)
+
+@tasks_bp.route('/<int:task_id>', methods=['DELETE'])
+@jwt_required()
+def delete_task(task_id):
+    """
+    Endpoint para deletar uma tarefa específica.
+    """
+    try:
+        current_user_id = int(get_jwt_identity())
+        
+        # Busca a tarefa específica
+        task = Task.query.get(task_id)
+
+        # Verifica se a tarefa existe
+        if not task:
+            return jsonify({"error": "Tarefa não encontrada"}), 404
+
+        # !! IMPORTANTE !!
+        # Verifica se a tarefa pertence ao usuário que está logado
+        if task.user_id != current_user_id:
+            return jsonify({"error": "Acesso não autorizado"}), 403 # 403 = Forbidden
+
+        # Deleta a tarefa do banco de dados
+        db.session.delete(task)
+        db.session.commit()
+
+        # Retorna uma resposta de sucesso (204 No Content é comum para DELETE)
+        return '', 204
+
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Erro ao deletar tarefa: {e}")
+        return jsonify({"error": "Erro interno ao deletar tarefa"}), 500
