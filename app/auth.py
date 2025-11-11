@@ -69,7 +69,7 @@ def login():
         if user and user.check_password(password):
             # Gera o token de acesso (JWT)
             # A 'identity' é o que será armazenado dentro do token (neste caso, o ID do usuário)
-            access_token = create_access_token(identity=user.id)
+            access_token = create_access_token(identity=str(user.id))
             
             return jsonify({
                 "message": "Login bem-sucedido!",
